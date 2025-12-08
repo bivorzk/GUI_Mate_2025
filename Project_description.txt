@@ -1,0 +1,69 @@
+1.     
+ A felület egy előre meghatározott
+ .jpg képfájl, ami a helyiség alaprajzát tartalmazza.
+
+ 
+ 
+2.     
+ Az alaprajzra interaktív ikonon
+ vannak felhelyezve. Ezeket az ikonokat több árnyalatban tartalmazza a rendszer
+ és az eszköz állapotától függően látjuk őket. Zöld a bekapcsolt, Piros a
+ kikapcsolt, Szürke az offline. Ezeket az állapotokat a rendszer folyamatos
+ állapot lekérdezés során frissíti (1mp-es időnként). (Minden eszköz típusnak
+ van 3 darab átlátszó hátterű 128x128 pixel méretű .ico ikonfájla. 1 darab zöld
+ árnyalatos, 1 darab piros árnyalatos, 1 darab szürke árnyalatos. Az eszköz
+ állapotától függően a megfelelő fájlt helyezi a képernyőre.)
+
+ 
+ 
+3.     
+ Az ikonra húzva az egeret az
+ eszköz megnevezését látjuk.
+
+ 
+ 
+4.     
+ Ikonokra jobb egérgombbal
+ kattintva az alábbi lehetőségek közül választhatunk: -kikapcsolás,
+ -bekapcsolás, -információ.
+ -kikapcsolásra kattintva, az eszköznek relé kimenet kikapcsolás parancsot küld,
+ -bekapcsolásra kattintva, az eszköznek relé kimenet bekapcsolás parancsot küld,
+ -információra kattintva, az adott eszköz adatai nyílnak meg kisablakban.
+
+ 
+ 
+Szükség
+ van egy beállítás menüre:
+
+ 
+ 
+1.     
+ Itt választhatjuk ki a háttér
+ .jpg-t.
+
+ 
+ 
+2.     
+ Itt adhatunk hozzá eszközt:
+ megadjuk az eszköz IP-jét, nevét, ikonját stb.. Ok gombbal az eszközt hozzá is
+ adtuk a rendszerhez. Ez egy ikont helyez a képernyőre, amit a bal egér
+ segítségével tudunk a megfelelő pozícióba húzni. Hozzá adjuk a többi eszközünket
+ is majd elmentjük a beállítást. Ilyenkor az ikonok helye a képen rögzül és az
+ alap nézetben mozgatni már nem tudjuk. Itt az ablak méretéhez képest a kép
+ méretét, arányát és az ikonok pontos helyét meg kell oldani. Vagy egy fix
+ méretet alkalmazunk PL:1280x720, vagy úgy kell megcsinálni, hogy a méret
+ változtatásával, vagy a teljes képernyős nézettel a kép és ikonok helye ne
+ térjen el.
+
+ 
+ 
+Szükség
+ van egy rutin menüre:
+
+ 
+ 
+1.     
+ Itt a ki és bekapcsolási
+ időzítéseket, órához rendelt ki és bekapcsolási parancsokat tudunk létrehozni
+ és kiválasztani, hogy a hozzáadott eszközök közül melyikre legyen érvényes.
+ Lássuk a meglévő rutinokat és azokat tudjuk szerkeszteni.
