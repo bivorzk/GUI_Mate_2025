@@ -5,8 +5,7 @@
  
  
 2.     
- Az alaprajzra interaktív ikonon
- vannak felhelyezve. Ezeket az ikonokat több árnyalatban tartalmazza a rendszer
+ Az alaprajzra interaktív ikononok vannak felhelyezve. Ezeket az ikonokat több árnyalatban tartalmazza a rendszer
  és az eszköz állapotától függően látjuk őket. Zöld a bekapcsolt, Piros a
  kikapcsolt, Szürke az offline. Ezeket az állapotokat a rendszer folyamatos
  állapot lekérdezés során frissíti (1mp-es időnként). (Minden eszköz típusnak

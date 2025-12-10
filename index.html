@@ -12,10 +12,28 @@
     />
     <title>Hello from Electron renderer!</title>
   </head>
-  <body>
+  <body id="background">
+    <button id="select-bg-btn" style="position: absolute; top: 20px; left: 20px; z-index: 10;">Select Background Image</button>
     <h1>Hello from Electron renderer!</h1>
-    <p>👋</p>
-    <p id="info"></p>
+      <style>
+        body {
+          background-image: url('background.jpg');
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+          min-height: 100vh;
+          margin: 0;
+          padding: 0;
+        }
+        .btn {
+          padding: 10px 20px;
+          font-size: 16px;
+          cursor: pointer;
+        }
+      </style>
+      <Button id="btn, state"><img src="./icon.png" alt="icon" width="128" height="128"></Button>
+
   </body>
   <script src="./renderer.js"></script>
+  <script src="./background_loader.js"></script>
 </html>
