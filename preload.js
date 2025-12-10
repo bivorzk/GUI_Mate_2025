@@ -1,7 +1,6 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer } = require("electron");
 
-
-contextBridge.exposeInMainWorld('fileAPI', {
-  openFile: () => ipcRenderer.invoke('open-file'),
-  saveFile: (data) => ipcRenderer.invoke('save-file', data)
+contextBridge.exposeInMainWorld("api", {
+  showContextMenu: () => ipcRenderer.send("show-context-menu"),
+  onSetBackgroundImage: (callback) => ipcRenderer.on('set-background-image', (event, filePath) => callback(filePath))
 });
