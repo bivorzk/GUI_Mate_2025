@@ -1,10 +1,46 @@
-const { app, BrowserWindow,dialog,ipcMain,shell, Menu } = require('electron/main')
-const path = require('path')
-const fs = require('fs')
+
+const { app, BrowserWindow,dialog,ipcMain,shell, Menu } = require('electron/main');
+const path = require('path');
+const fs = require('fs');
 const fsPromise = fs.promises;
 
+// Path to devices.json
+const devicesFile = path.join(__dirname, 'devices.json');
+
+// Helper to read devices.json
+function readDevices() {
+  try {
+    if (fs.existsSync(devicesFile)) {
+      const data = fs.readFileSync(devicesFile, 'utf-8');
+      return JSON.parse(data);
+    }
+  } catch (e) { console.error(e); }
+  return [];
+}
+
+// Helper to write devices.json
+function writeDevices(devices) {
+  try {
+    fs.writeFileSync(devicesFile, JSON.stringify(devices, null, 2), 'utf-8');
+  } catch (e) { console.error(e); }
+}
+
+// Listen for add-device from popup
+ipcMain.on('add-device', (event, device) => {
+  console.log('Received add-device event:', device);
+  const devices = readDevices();
+  console.log('Current devices:', devices);
+  devices.push(device);
+  console.log('Updated devices:', devices);
+  writeDevices(devices);
+  console.log('Device written to file');
+});
+
+let mainWindow;
+let popupWindow;
+
 const createWindow = () => {
-  const win = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 800,
     webPreferences: {
@@ -14,8 +50,26 @@ const createWindow = () => {
     }
   })
 
-  win.loadFile('index.html')
+  mainWindow.loadFile('index.html')
  
+}
+
+// Function to handle adding new devices
+function onDeviceAdd() {
+  // Example device data - replace with actual device detection logic
+  const newDevices = [
+    {
+      name: "Smart Light",
+      ip: "192.168.1.100", 
+      type: "Light"
+    }
+  ];
+  
+  // Send device data to renderer process
+  const windows = BrowserWindow.getAllWindows();
+  if (windows.length > 0) {
+    windows[0].webContents.send('device-add', newDevices);
+  }
 }
 // Adds a menu bar with options to select background image and other settings
 const menuBar = [
@@ -47,6 +101,7 @@ const menuBar = [
       { 
         label: 'Add New Device',
         click: () => {
+          onDeviceAdd();
           console.log('Add New Device clicked');
         }
       },
@@ -89,9 +144,31 @@ const menu = Menu.buildFromTemplate(menuBar)
 Menu.setApplicationMenu(menu)
 
 
+function createPopup() {
+  popupWindow = new BrowserWindow({
+    width: 300,
+    height: 400,
+    parent: mainWindow,      // keeps popup on top
+    modal: true,             // locks parent window until closed
+    show: false,             // hide until ready
+    frame: true,             // set false for frameless popup
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js")
+    }
+  });
+
+  popupWindow.loadFile("popup.html");
+
+  popupWindow.once("ready-to-show", () => {
+    popupWindow.show();
+  });
+}
+
+
 ipcMain.on('show-context-menu', (event) => {
 	event.preventDefault();
 
+  
 
 	const menu = Menu.buildFromTemplate([
 		{
@@ -110,6 +187,9 @@ ipcMain.on('show-context-menu', (event) => {
 
 });
 
+  ipcMain.on("open-popup", () => {
+    createPopup();
+  });
 
 app.whenReady().then(() => {
   createWindow()

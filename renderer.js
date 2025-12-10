@@ -12,16 +12,21 @@ window.addEventListener("contextmenu", (e) => {
   }
 });
 
+
 // Add new devices to the device list
 window.electronAPI.OnDeviceAdd((data => {
   console.log("Device added:", data);
-
+	
+  window.api.openPopup();
+  
   data.forEach(device => {
 	const deviceList = document.getElementById('device-list');
 	const listItem = document.createElement('li');
-	listItem.textContent = `Device Name: ${device.name}, IP: ${device.ip}, Status: ${device.status}, Other info : ${device.otherInfo}`;	 
+	listItem.textContent = `Device Name: ${device.name}, IP: ${device.ip}, Device Type: ${device.type}`;	 
 	deviceList.appendChild(listItem);
   });
+
+
 
 }));
 
