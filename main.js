@@ -65,11 +65,15 @@ function onDeviceAdd() {
     }
   ];
   
-  // Send device data to renderer process
+  // Send device data to renderer process and create device buttons
   const windows = BrowserWindow.getAllWindows();
   if (windows.length > 0) {
     windows[0].webContents.send('device-add', newDevices);
+    newDevices.forEach(device => {
+      windows[0].webContents.send('create-device-button', device);
+    });
   }
+
 }
 // Adds a menu bar with options to select background image and other settings
 const menuBar = [
@@ -151,7 +155,8 @@ function createPopup() {
     parent: mainWindow,      // keeps popup on top
     modal: true,             // locks parent window until closed
     show: false,             // hide until ready
-    frame: true,             // set false for frameless popup
+    autoHideMenuBar: true,             // set false for frameless popup
+    resizable: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js")
     }

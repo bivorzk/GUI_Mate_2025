@@ -4,35 +4,114 @@
     <meta charset="UTF-8" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
     />
     <meta
       http-equiv="X-Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
     />
     <title>Hello from Electron renderer!</title>
+    <link rel="stylesheet" href="./style/style.css" />
   </head>
   <body id="background">
     <h1>Hello from Electron renderer!</h1>
       <style>
-        body {
-          background-image: url('background.jpg');
-          background-size: cover;
-          background-position: center;
-          background-repeat: no-repeat;
-          min-height: 100vh;
-          margin: 0;
-          padding: 0;
-        }
-        .btn {
-          padding: 10px 20px;
-          font-size: 16px;
-          cursor: pointer;
-        }
-      </style>
-      <Button id="btn" data-state="OFF"><img src="./imgs/icon.png" alt="icon" width="128" height="128"></Button>
+/* Background */
+body {
+  background-image: url('background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  -webkit-app-region: drag; /* Enable window dragging on empty areas */
+}
 
+/* Make the button movable */
+#btn {
+  position: absolute;     /* required for free movement */
+  left: 50px;             /* starting position */
+  top: 50px;
+  cursor: grab;
+  border: none;
+  background: transparent;
+  padding: 0;
+  -webkit-app-region: no-drag; /* Disable window drag on button */
+  z-index: 1000;         /* Ensure it's above other elements */
+}
+
+#btn:active {
+  cursor: grabbing;
+}
+
+/* Optional styling for the image inside */
+#btn img {
+  pointer-events: none;   /* keeps dragging smooth */
+  user-select: none;      /* prevent text selection */
+}
+
+.draggable {
+  -webkit-app-region: no-drag;
+}
+      </style>
+    <button id="btn" data-state="OFF">
+        <img id="Device_name" src="./imgs/icon.png" width="128" height="128">
+    </button>
   </body>
+  <script>
+    // Simple drag test directly in HTML
+    console.log("HTML script loading...");
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log("DOM loaded");
+      const btn = document.getElementById('btn');
+      console.log("Button found:", btn);
+      
+      if (btn) {
+        let isDragging = false;
+        let startX, startY, startLeft, startTop;
+        
+        btn.addEventListener('mousedown', (e) => {
+          console.log("Mousedown detected!");
+          isDragging = true;
+          startX = e.clientX;
+          startY = e.clientY;
+          
+          // Get current position
+          const style = window.getComputedStyle(btn);
+          startLeft = parseInt(style.left) || 0;
+          startTop = parseInt(style.top) || 0;
+          
+          btn.style.cursor = 'grabbing';
+          e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+          if (!isDragging) return;
+          console.log("Mouse moving while dragging");
+          
+          const deltaX = e.clientX - startX;
+          const deltaY = e.clientY - startY;
+          
+          btn.style.left = (startLeft + deltaX) + 'px';
+          btn.style.top = (startTop + deltaY) + 'px';
+        });
+        
+        document.addEventListener('mouseup', () => {
+          if (isDragging) {
+            console.log("Mouse up - stopping drag");
+            isDragging = false;
+            btn.style.cursor = 'grab';
+          }
+        });
+        
+        console.log("Drag events set up successfully");
+      } else {
+        console.log("Button not found!");
+      }
+    });
+  </script>
   <script src="./renderer.js"></script>
   <script src="./background_loader.js"></script>
 </html>
