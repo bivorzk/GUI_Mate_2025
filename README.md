@@ -14,29 +14,34 @@ Ez a projekt egy interaktív grafikus felületet valósít meg, amely egy helyis
 ### Fő Funkciók
 
 1. **Alaprajz háttér**
+```
    - Egy előre kiválasztott .jpg képfájl jeleníti meg a helyiség alaprajzát.
-
+```
 2. **Interaktív ikonok**
+```
    - Az alaprajzon eszközöket szimbolizáló ikonok jelennek meg.
    - Minden eszköztípushoz háromféle (zöld: bekapcsolt, piros: kikapcsolt, szürke: offline) 128x128 px átlátszó hátterű .ico ikon tartozik.
    - Az ikonok állapota 1 másodperces frissítéssel automatikusan változik.
-
+```
 3. **Ikon interakciók**
+```
    - Az ikon fölé húzva az egeret, megjelenik az eszköz neve.
    - Jobb egérgombbal kattintva menü jelenik meg: bekapcsolás, kikapcsolás, információ.
    - Bekapcsolás/kikapcsolás: relé kimenet vezérlése.
    - Információ: eszköz adatai külön ablakban.
-
+```
 4. **Beállítások menü**
+```
    - Háttérkép kiválasztása.
    - Új eszköz hozzáadása (IP, név, ikon stb.), majd az ikon szabadon pozícionálható a képen.
    - Az ikonok helyzete elmenthető, később már nem mozgatható.
    - A kép és ikonok arányos elhelyezése fix vagy dinamikus méretezéssel.
-
+```
 5. **Rutin menü**
+```
    - Ki- és bekapcsolási időzítések, órához rendelt parancsok létrehozása.
    - Rutinok szerkesztése, meglévő rutinok áttekintése.
-
+```
 ## Telepítés és futtatás
 
 1. Telepítsd a függőségeket:
@@ -54,8 +59,17 @@ Ez a projekt egy interaktív grafikus felületet valósít meg, amely egy helyis
 
 ## Fájlok
 - `index.html` – Az alkalmazás fő HTML fájlja
-- `main.js` – Az alkalmazás fő JavaScript logikája
+- `main.js` – Az alkalmazás fő JavaScript logikája (Electron főfolyamat)
+- `renderer.js` – Renderer folyamat logikája (UI, ikonok, események)
+- `popup.html` – Eszköz információs ablak HTML-je
+- `popup.js` – Eszköz információs ablak logikája
+- `preload.js` – Electron preload szkript
 - `package.json` – Projekt metaadatok és függőségek
+- `devices.json` – Eszközök konfigurációs fájlja
+- `imgs/` – Ikonok és képek mappája
+- `style/style.css` – Alap stíluslap
+- `style/popup.css` – Popup ablak stíluslapja
+- `Project_description.txt` – Részletes projektleírás
 
 ## Szerző
 - Készítette: [Kugli Balázs]

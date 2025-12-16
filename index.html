@@ -55,63 +55,12 @@ body {
   -webkit-app-region: no-drag;
 }
       </style>
-    <button id="btn" data-state="OFF">
-        <img id="Device_name" src="./imgs/icon.png" width="128" height="128">
-    </button>
+
+
+      <div id="device-buttons"></div>
+
+    <!-- Device buttons are created dynamically by renderer.js -->
   </body>
-  <script>
-    // Simple drag test directly in HTML
-    console.log("HTML script loading...");
-    
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log("DOM loaded");
-      const btn = document.getElementById('btn');
-      console.log("Button found:", btn);
-      
-      if (btn) {
-        let isDragging = false;
-        let startX, startY, startLeft, startTop;
-        
-        btn.addEventListener('mousedown', (e) => {
-          console.log("Mousedown detected!");
-          isDragging = true;
-          startX = e.clientX;
-          startY = e.clientY;
-          
-          // Get current position
-          const style = window.getComputedStyle(btn);
-          startLeft = parseInt(style.left) || 0;
-          startTop = parseInt(style.top) || 0;
-          
-          btn.style.cursor = 'grabbing';
-          e.preventDefault();
-        });
-        
-        document.addEventListener('mousemove', (e) => {
-          if (!isDragging) return;
-          console.log("Mouse moving while dragging");
-          
-          const deltaX = e.clientX - startX;
-          const deltaY = e.clientY - startY;
-          
-          btn.style.left = (startLeft + deltaX) + 'px';
-          btn.style.top = (startTop + deltaY) + 'px';
-        });
-        
-        document.addEventListener('mouseup', () => {
-          if (isDragging) {
-            console.log("Mouse up - stopping drag");
-            isDragging = false;
-            btn.style.cursor = 'grab';
-          }
-        });
-        
-        console.log("Drag events set up successfully");
-      } else {
-        console.log("Button not found!");
-      }
-    });
-  </script>
+  <!-- All drag and device logic is handled in renderer.js -->
   <script src="./renderer.js"></script>
-  <script src="./background_loader.js"></script>
 </html>

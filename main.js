@@ -1,8 +1,69 @@
 
+
 const { app, BrowserWindow,dialog,ipcMain,shell, Menu } = require('electron/main');
 const path = require('path');
 const fs = require('fs');
 const fsPromise = fs.promises;
+
+// Expose a handler to load all devices for renderer
+ipcMain.handle('load-all-devices', async () => {
+  try {
+    return readDevices();
+  } catch (e) {
+    return [];
+  }
+});
+// --- Icon positions save/load ---
+ipcMain.handle('save-icon-positions', async (event, positions) => {
+  try {
+    const posFile = path.join(__dirname, 'icon_positions.json');
+    fs.writeFileSync(posFile, JSON.stringify(positions, null, 2), 'utf-8');
+    return { success: true };
+  } catch (e) {
+    console.error('Error saving icon positions:', e);
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle('load-icon-positions', async () => {
+  try {
+    const posFile = path.join(__dirname, 'icon_positions.json');
+    if (fs.existsSync(posFile)) {
+      const data = fs.readFileSync(posFile, 'utf-8');
+      return JSON.parse(data);
+    }
+    return {};
+  } catch (e) {
+    console.error('Error loading icon positions:', e);
+    return {};
+  }
+});
+
+// --- Routine save/load (stubs) ---
+ipcMain.handle('save-routines', async (event, routines) => {
+  try {
+    const file = path.join(__dirname, 'routines.json');
+    fs.writeFileSync(file, JSON.stringify(routines, null, 2), 'utf-8');
+    return { success: true };
+  } catch (e) {
+    console.error('Error saving routines:', e);
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle('load-routines', async () => {
+  try {
+    const file = path.join(__dirname, 'routines.json');
+    if (fs.existsSync(file)) {
+      const data = fs.readFileSync(file, 'utf-8');
+      return JSON.parse(data);
+    }
+    return [];
+  } catch (e) {
+    console.error('Error loading routines:', e);
+    return [];
+  }
+});
 
 // Path to devices.json
 const devicesFile = path.join(__dirname, 'devices.json');
@@ -29,11 +90,14 @@ function writeDevices(devices) {
 ipcMain.on('add-device', (event, device) => {
   console.log('Received add-device event:', device);
   const devices = readDevices();
-  console.log('Current devices:', devices);
   devices.push(device);
-  console.log('Updated devices:', devices);
   writeDevices(devices);
   console.log('Device written to file');
+  // Notify all renderer windows to add device button
+  const windows = BrowserWindow.getAllWindows();
+  windows.forEach(win => {
+    win.webContents.send('device-add', [device]);
+  });
 });
 
 let mainWindow;
@@ -56,22 +120,20 @@ const createWindow = () => {
 
 // Function to handle adding new devices
 function onDeviceAdd() {
-  // Example device data - replace with actual device detection logic
-  const newDevices = [
-    {
-      name: "Smart Light",
-      ip: "192.168.1.100", 
-      type: "Light"
-    }
-  ];
-  
-  // Send device data to renderer process and create device buttons
+  // Example device for menu action
+  const newDevice = {
+    name: "Smart Light",
+    ip: "192.168.1.100",
+    type: "Light"
+  };
+  // Save to devices.json
+  const devices = readDevices();
+  devices.push(newDevice);
+  writeDevices(devices);
+  // Notify renderer to add device button
   const windows = BrowserWindow.getAllWindows();
   if (windows.length > 0) {
-    windows[0].webContents.send('device-add', newDevices);
-    newDevices.forEach(device => {
-      windows[0].webContents.send('create-device-button', device);
-    });
+    windows[0].webContents.send('device-add', [newDevice]);
   }
 
 }
@@ -105,7 +167,12 @@ const menuBar = [
       { 
         label: 'Add New Device',
         click: () => {
-          onDeviceAdd();
+          createPopup();
+          // After popup closes and device is added, save icon positions in renderer
+          const windows = BrowserWindow.getAllWindows();
+          if (windows.length > 0) {
+            windows[0].webContents.send('save-icon-positions-request');
+          }
           console.log('Add New Device clicked');
         }
       },
@@ -183,7 +250,15 @@ ipcMain.on('show-context-menu', (event) => {
 		{
 			label: 'Option 2',
 			click: () => { console.log('Option 2 clicked'); }
-		}
+		},
+  {
+      label: 'information',
+      click: () => { 
+        DeviceInfo();
+        shell.openExternal('https://example.com'); 
+      }
+
+    }
 	]);
   
 	menu.popup({
