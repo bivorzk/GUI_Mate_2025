@@ -1008,6 +1008,17 @@ window.addEventListener('load', async () => {
   console.log('window.electronAPI available:', !!window.electronAPI);
   console.log('window.projectAPI available:', !!window.projectAPI);
   console.log('window.deviceAPI available:', !!window.deviceAPI);
+  console.log('window.api available:', !!window.api);
+
+  // Set up background image listener
+  if (window.api && window.api.onSetBackgroundImage) {
+    window.api.onSetBackgroundImage((filePath) => {
+      console.log('Setting background image to:', filePath);
+      document.body.style.backgroundImage = `url('file://${filePath}')`;
+    });
+  } else {
+    console.error('window.api.onSetBackgroundImage not available');
+  }
 
   if (!window.electronAPI || !window.electronAPI.loadAllDevices) {
     console.error('electronAPI.loadAllDevices not available');

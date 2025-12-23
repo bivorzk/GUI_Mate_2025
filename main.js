@@ -320,7 +320,7 @@ const menuBar = [
             const result = await dialog.showOpenDialog({
               properties: ['openFile'],
               filters: [
-                { name: 'Select picture', extensions: ['jpg'] }
+                { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'bmp'] }
               ]
             });
             if (!result.canceled && result.filePaths.length > 0) {
