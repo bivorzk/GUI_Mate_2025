@@ -4,6 +4,8 @@ const { app, BrowserWindow,dialog,ipcMain,shell, Menu } = require('electron/main
 const path = require('path');
 const fs = require('fs');
 const fsPromise = fs.promises;
+const deviceNetwork = require('./deviceNetwork');
+const RoutineManager = require('./routineManager');
 
 // Expose a handler to load all devices for renderer
 ipcMain.handle('load-all-devices', async () => {
@@ -11,6 +13,169 @@ ipcMain.handle('load-all-devices', async () => {
     return readDevices();
   } catch (e) {
     return [];
+  }
+});
+
+// Device status checking
+ipcMain.handle('check-device-status', async (event, device) => {
+  try {
+    const status = await deviceNetwork.checkDeviceStatus(device);
+    return { success: true, status };
+  } catch (error) {
+    console.error('Error checking device status:', error);
+    return { success: false, error: error.message, status: 'OFFLINE' };
+  }
+});
+
+// Device relay control
+ipcMain.handle('control-device-relay', async (event, device, turnOn) => {
+  try {
+    const success = await deviceNetwork.controlDeviceRelay(device, turnOn);
+    return { success };
+  } catch (error) {
+    console.error('Error controlling device relay:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Test device connectivity
+ipcMain.handle('test-device-connectivity', async (event, device) => {
+  try {
+    const isConnected = await deviceNetwork.testDeviceConnectivity(device);
+    return { success: true, connected: isConnected };
+  } catch (error) {
+    console.error('Error testing device connectivity:', error);
+    return { success: false, error: error.message, connected: false };
+  }
+});
+
+// Device discovery
+ipcMain.handle('discover-devices', async () => {
+  try {
+    const discoveredDevices = await deviceNetwork.discoverDevices();
+    return { success: true, devices: discoveredDevices };
+  } catch (error) {
+    console.error('Error discovering devices:', error);
+    return { success: false, error: error.message, devices: [] };
+  }
+});
+
+// Device removal
+ipcMain.handle('remove-device', async (event, deviceName) => {
+  try {
+    const devices = readDevices();
+    const filteredDevices = devices.filter(device => device.name !== deviceName);
+    writeDevices(filteredDevices);
+
+    // Remove icon position
+    const positions = {};
+    try {
+      const posData = fs.readFileSync(iconPositionsFile, 'utf-8');
+      const existingPositions = JSON.parse(posData);
+      Object.keys(existingPositions).forEach(key => {
+        if (!key.includes(deviceName)) {
+          positions[key] = existingPositions[key];
+        }
+      });
+      fs.writeFileSync(iconPositionsFile, JSON.stringify(positions, null, 2), 'utf-8');
+    } catch (error) {
+      console.error('Error updating icon positions:', error);
+    }
+
+    // Notify renderer to remove device button
+    const windows = BrowserWindow.getAllWindows();
+    windows.forEach(win => {
+      win.webContents.send('device-removed', deviceName);
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error removing device:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Device editing
+ipcMain.handle('update-device', async (event, oldDeviceName, updatedDevice) => {
+  try {
+    const devices = readDevices();
+    const deviceIndex = devices.findIndex(device => device.name === oldDeviceName);
+
+    if (deviceIndex === -1) {
+      return { success: false, error: 'Device not found' };
+    }
+
+    devices[deviceIndex] = updatedDevice;
+    writeDevices(devices);
+
+    // Update icon position key if device name changed
+    if (oldDeviceName !== updatedDevice.name) {
+      try {
+        const posData = fs.readFileSync(iconPositionsFile, 'utf-8');
+        const positions = JSON.parse(posData);
+        const oldKey = `btn-${oldDeviceName}`;
+        const newKey = `btn-${updatedDevice.name}`;
+
+        if (positions[oldKey]) {
+          positions[newKey] = positions[oldKey];
+          delete positions[oldKey];
+          fs.writeFileSync(iconPositionsFile, JSON.stringify(positions, null, 2), 'utf-8');
+        }
+      } catch (error) {
+        console.error('Error updating icon positions:', error);
+      }
+    }
+
+    // Notify renderer to update device
+    const windows = BrowserWindow.getAllWindows();
+    windows.forEach(win => {
+      win.webContents.send('device-updated', { oldName: oldDeviceName, newDevice: updatedDevice });
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating device:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// --- Routine management IPC handlers ---
+ipcMain.handle('get-routines', async () => {
+  try {
+    return { success: true, routines: routineManager.getRoutines() };
+  } catch (error) {
+    console.error('Error getting routines:', error);
+    return { success: false, error: error.message, routines: [] };
+  }
+});
+
+ipcMain.handle('add-routine', async (event, routine) => {
+  try {
+    const newRoutine = routineManager.addRoutine(routine);
+    return { success: true, routine: newRoutine };
+  } catch (error) {
+    console.error('Error adding routine:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('update-routine', async (event, routineId, updates) => {
+  try {
+    const updatedRoutine = routineManager.updateRoutine(routineId, updates);
+    return { success: true, routine: updatedRoutine };
+  } catch (error) {
+    console.error('Error updating routine:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('remove-routine', async (event, routineId) => {
+  try {
+    const success = routineManager.removeRoutine(routineId);
+    return { success };
+  } catch (error) {
+    console.error('Error removing routine:', error);
+    return { success: false, error: error.message };
   }
 });
 // --- Icon positions save/load ---
@@ -67,6 +232,7 @@ ipcMain.handle('load-routines', async () => {
 
 // Path to devices.json
 const devicesFile = path.join(__dirname, 'devices.json');
+const iconPositionsFile = path.join(__dirname, 'icon_positions.json');
 
 // Helper to read devices.json
 function readDevices() {
@@ -115,7 +281,12 @@ const createWindow = () => {
   })
 
   mainWindow.loadFile('index.html')
- 
+
+  // Add global shortcut for DevTools
+  const { globalShortcut } = require('electron');
+  globalShortcut.register('F12', () => {
+    mainWindow.webContents.toggleDevTools();
+  });
 }
 
 // Function to handle adding new devices
@@ -177,16 +348,70 @@ const menuBar = [
         }
       },
       {
-        label: 'Save Icon Positions',
+        label: 'Discover Devices',
         click: () => {
-          console.log('Save Icon Positions clicked');
-
+          // Send message to renderer to start device discovery
+          const windows = BrowserWindow.getAllWindows();
+          if (windows.length > 0) {
+            windows[0].webContents.send('discover-devices-request');
+          }
+          console.log('Discover Devices clicked');
         }
       },
       {
-        label: 'Dynmaic Icon Positions',
+        label: 'Save Icon Positions',
         click: () => {
-          console.log('Dynamic Icon Positions clicked');
+          // Send message to renderer to save icon positions
+          const windows = BrowserWindow.getAllWindows();
+          if (windows.length > 0) {
+            windows[0].webContents.send('save-icon-positions-request');
+          }
+        }
+      },
+      {
+        label: 'Scaling Options',
+        submenu: [
+          {
+            label: 'Fixed Scaling',
+            type: 'radio',
+            checked: true,
+            click: () => {
+              const windows = BrowserWindow.getAllWindows();
+              if (windows.length > 0) {
+                windows[0].webContents.send('set-scaling-mode', 'fixed');
+              }
+            }
+          },
+          {
+            label: 'Dynamic Scaling',
+            type: 'radio',
+            click: () => {
+              const windows = BrowserWindow.getAllWindows();
+              if (windows.length > 0) {
+                windows[0].webContents.send('set-scaling-mode', 'dynamic');
+              }
+            }
+          },
+          { type: 'separator' },
+          {
+            label: 'Advanced Scaling Controls',
+            click: () => {
+              const windows = BrowserWindow.getAllWindows();
+              if (windows.length > 0) {
+                windows[0].webContents.send('toggle-scaling-controls');
+              }
+            }
+          }
+        ]
+      },
+      {
+        label: 'Toggle Developer Tools',
+        accelerator: 'F12',
+        click: () => {
+          const windows = BrowserWindow.getAllWindows();
+          if (windows.length > 0) {
+            windows[0].webContents.toggleDevTools();
+          }
         }
       }
     ]
@@ -197,13 +422,21 @@ const menuBar = [
       {
         label: 'Add On/Off Timer Rutin',
         click: () => {
-          console.log('On/Off Timer Rutin clicked');
+          // Send message to renderer to add routine
+          const windows = BrowserWindow.getAllWindows();
+          if (windows.length > 0) {
+            windows[0].webContents.send('add-routine-request');
+          }
         }
       },
       {
         label: 'Edit Rutins',
         click: () => {
-          console.log('Edit Rutins clicked');
+          // Send message to renderer to edit routines
+          const windows = BrowserWindow.getAllWindows();
+          if (windows.length > 0) {
+            windows[0].webContents.send('edit-routines-request');
+          }
         }
       }
     ]
@@ -233,6 +466,29 @@ function createPopup() {
 
   popupWindow.once("ready-to-show", () => {
     popupWindow.show();
+  });
+}
+
+function createEditPopup(device) {
+  editPopupWindow = new BrowserWindow({
+    width: 300,
+    height: 400,
+    parent: mainWindow,      // keeps popup on top
+    modal: true,             // locks parent window until closed
+    show: false,             // hide until ready
+    autoHideMenuBar: true,             // set false for frameless popup
+    resizable: false,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js")
+    }
+  });
+
+  // Pass device data as URL parameter
+  const deviceData = encodeURIComponent(JSON.stringify(device));
+  editPopupWindow.loadURL(`file://${__dirname}/editPopup.html?device=${deviceData}`);
+
+  editPopupWindow.once("ready-to-show", () => {
+    editPopupWindow.show();
   });
 }
 
@@ -271,7 +527,16 @@ ipcMain.on('show-context-menu', (event) => {
     createPopup();
   });
 
+  ipcMain.on("open-edit-popup", (event, device) => {
+    createEditPopup(device);
+  });
+
+// Global routine manager instance
+let routineManager;
+
 app.whenReady().then(() => {
+  // Initialize routine manager
+  routineManager = new RoutineManager();
   createWindow()
 
   app.on('activate', () => {

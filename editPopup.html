@@ -3,28 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Devices</title>
+    <title>Edit Device</title>
     <link rel="stylesheet" href="style/popup.css">
-
 </head>
 <body class="center">
-    
-    <h1>Add Devices</h1>
 
-    <form>
+    <h1>Edit Device</h1>
+
+    <form id="editForm">
         <label for="deviceName">Device Name:</label><br>
-        <input type="text" id="deviceName" name="deviceName"><br><br>
+        <input type="text" id="deviceName" name="deviceName" required><br><br>
         <label for="deviceType">Device Type:</label><br>
-        <input type="text" id="deviceType" name="deviceType" value="Shelly Plug S"><br><br>
+        <input type="text" id="deviceType" name="deviceType" value="Shelly Plug S" required><br><br>
         <label for="deviceIP">Device IP:</label><br>
-        <input type="text" id="deviceIP" name="deviceIP" placeholder="192.168.1.xxx"><br><br>
+        <input type="text" id="deviceIP" name="deviceIP" placeholder="192.168.1.xxx" required><br><br>
         <label for="username">Username (optional):</label><br>
         <input type="text" id="username" name="username" value="admin"><br><br>
         <label for="password">Password (optional):</label><br>
         <input type="password" id="password" name="password" placeholder="Leave empty for no auth"><br><br>
-        <input  id="submit" type="submit" value="Add Device">
+        <input id="submit" type="submit" value="Update Device">
+        <button type="button" id="cancelBtn">Cancel</button>
     </form>
 
-    <script src="popup.js"></script>
+    <script src="editPopup.js"></script>
 </body>
 </html>
